@@ -1,7 +1,10 @@
 
-evalRemote <- function(script, dataPath, outputPath) {
+evalRemote <- function(script, dataPath, echo, outputPath, ...) {
+    options <- list(...)
+    figWidth <- options$figWidth
+    figHeight <- options$figHeight
     data <- readDF(dataPath, NULL, FALSE)
-    results <- eval(script, data)
+    results <- eval(script, data, echo, figWidth=figWidth, figHeight=figHeight)
     saveRDS(results, file=outputPath)
     NULL
 }
@@ -15,7 +18,11 @@ read <- function(path, columns=NULL, headerOnly=FALSE) {
 #' @importFrom rappdirs user_data_dir
 #' @importFrom httr GET content
 listDS <- function() {
-    appDataDir <- user_data_dir('jamovi')
+    
+    if (Sys.info()['sysname'] == 'Linux')
+        appDataDir <- '~/.jamovi'
+    else
+        appDataDir <- user_data_dir('jamovi')
     
     portFile <- dir(appDataDir, '[0-9]+\\.port')
     if (length(portFile) < 1)

@@ -2,7 +2,7 @@
 #' @importFrom utils capture.output
 #' @importFrom evaluate evaluate new_output_handler
 #' @importFrom jmvcore Options Group Image Preformatted
-eval <- function(script, data, root) {
+eval <- function(script, data, echo, root, ...) {
     
     eval.env <- new.env()
     
@@ -11,7 +11,24 @@ eval <- function(script, data, root) {
     
     env <- new.env()
     env$count <- 1
-    options <- Options$new()
+    
+    conf <- list(...)
+    
+    figWidth <- as.integer(conf$figWidth)
+    if (length(figWidth) == 1 && ! is.na(figWidth))
+        env$figWidth <- figWidth
+    else
+        env$figWidth <- 400
+    
+    figHeight <- as.integer(conf$figHeight)
+    if (length(figHeight) == 1 && ! is.na(figHeight))
+        env$figHeight <- figHeight
+    else
+        env$figHeight <- 300
+    
+    env$echo <- isTRUE(echo)
+    
+    options <- jmvcore::Options$new()
     
     if (missing(root))
         root <- Group$new(options, title="Results")
@@ -37,6 +54,9 @@ eval <- function(script, data, root) {
     }
     
     source_handler <- function(value) {
+        if ( ! env$echo)
+            return()
+        
         value <- trimws(value$src)
         if (value == '')
             return()
@@ -66,7 +86,9 @@ eval <- function(script, data, root) {
         results <- Image$new(
             options=options,
             name=paste(env$count),
-            renderFun='.render')
+            renderFun='.render',
+            width=env$figWidth,
+            height=env$figHeight)
         root$add(results)
         results$setState(plot)
         env$count <- env$count + 1
