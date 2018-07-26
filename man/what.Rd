@@ -14,13 +14,13 @@ the read() function.
 \dontrun{
 jmvconnect::what()
 
-#  Available Data Sets                   
-#  ------------------------------------- 
-#         Title           Rows    Cols   
-#  ------------------------------------- 
-#    1    iris             150       5   
-#    2    Tooth Growth      60       3   
-#  ------------------------------------- 
+#  Available Data Sets
+#  -------------------------------------
+#         Title           Rows    Cols
+#  -------------------------------------
+#    1    iris             150       5
+#    2    Tooth Growth      60       3
+#  -------------------------------------
 
 data <- jmvconnect::read('Tooth Growth')
 

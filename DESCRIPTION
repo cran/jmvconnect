@@ -1,8 +1,8 @@
 Package: jmvconnect
 Type: Package
 Title: Connect to the 'jamovi' Statistical Spreadsheet
-Version: 1.0.2
-Date: 2018-07-23
+Version: 1.0.3
+Date: 2018-07-26
 Authors@R: person('Jonathon', 'Love', role = c("aut", "cre"), email = "jon@thon.cc")
 Maintainer: Jonathon Love <jon@thon.cc>
 Description: Methods to access data sets from the 'jamovi' statistical
@@ -14,7 +14,7 @@ LinkingTo: Rcpp, BH
 RoxygenNote: 6.0.1
 SystemRequirements: jamovi, C++11
 NeedsCompilation: yes
-Packaged: 2018-07-24 05:29:09 UTC; jonathon
+Packaged: 2018-07-26 10:55:08 UTC; jonathon
 Author: Jonathon Love [aut, cre]
 Repository: CRAN
-Date/Publication: 2018-07-24 09:00:11 UTC
+Date/Publication: 2018-07-26 11:50:02 UTC
