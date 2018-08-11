@@ -8,8 +8,6 @@
 #include <climits>
 #include <stdexcept>
 
-#include <iostream>
-
 using namespace std;
 
 DataSet *DataSet::retrieve(MemoryMap *mm)
@@ -100,7 +98,7 @@ bool DataSet::isRowFiltered(int index) const
             if ( ! column.active())
                 continue;
 
-            int value = column.value<int>(index);
+            int value = column.raw<int>(index);
             if (value != 1)
                 return true;
         }

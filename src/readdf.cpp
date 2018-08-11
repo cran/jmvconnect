@@ -1,12 +1,12 @@
 
 #include "readdf.h"
 
+#include "memorymap.h"
+#include "dataset.h"
+
 #include <string>
 #include <vector>
 #include <map>
-
-#include "memorymap.h"
-#include "dataset.h"
 
 using namespace Rcpp;
 using namespace std;
@@ -90,12 +90,12 @@ DataFrame readDF(
                 for (int j = 0; j < rowCount; j++)
                 {
                     if ( ! dataset.isRowFiltered(j))
-                        v[rowNo++] = column.value<double>(j);
+                        v[rowNo++] = column.raw<double>(j);
                 }
 
                 columns[colNo] = v;
             }
-            else if (column.measureType() == MeasureType::CONTINUOUS)
+            else if (column.dataType() == DataType::INTEGER && ! column.hasLevels())
             {
                 IntegerVector v(rowCountExFiltered, IntegerVector::get_na());
                 rowNo = 0;
@@ -103,9 +103,27 @@ DataFrame readDF(
                 for (int j = 0; j < rowCount; j++)
                 {
                     if ( ! dataset.isRowFiltered(j))
-                        v[rowNo++] = column.value<int>(j);
+                        v[rowNo++] = column.raw<int>(j);
                 }
 
+                if (column.measureType() == MeasureType::ID)
+                    v.attr("jmv-id") = true;
+
+                columns[colNo] = v;
+            }
+            else if (column.dataType() == DataType::TEXT &&
+                     column.measureType() == MeasureType::ID)
+            {
+                StringVector v(rowCountExFiltered, StringVector::get_na());
+                rowNo = 0;
+
+                for (int j = 0; j < rowCount; j++)
+                {
+                    if ( ! dataset.isRowFiltered(j))
+                        v[rowNo++] = String(column.raws(j));
+                }
+
+                v.attr("jmv-id") = true;
                 columns[colNo] = v;
             }
             else
@@ -159,7 +177,7 @@ DataFrame readDF(
                 {
                     if ( ! dataset.isRowFiltered(j))
                     {
-                        int value = column.value<int>(j);
+                        int value = column.raw<int>(j);
                         if (value != MISSING)
                             v[rowNo] = indexes[value];
                         rowNo++;
@@ -182,15 +200,16 @@ DataFrame readDF(
                     v.attr("values") = values;
 
                     if (column.measureType() == MeasureType::ORDINAL)
-                        v.attr("class") = CharacterVector::create("SilkyFactor", "ordered", "factor");
+                        v.attr("class") = CharacterVector::create("ordered", "factor");
                     else
-                        v.attr("class") = CharacterVector::create("SilkyFactor", "factor");
+                        v.attr("class") = CharacterVector::create("factor");
                 }
 
                 if ( ! column.trimLevels() && column.hasUnusedLevels())
-                {
                     v.attr("jmv-unused-levels") = true;
-                }
+
+                if (column.measureType() == MeasureType::ID)
+                    v.attr("jmv-id") = true;
 
                 columns[colNo] = v;
             }
