@@ -33,7 +33,7 @@ listDS <- function() {
         stop('A running jamovi instance could not be found', call.=FALSE)
 
     port <- substring(portFile, match[2], attr(match, 'match.length')[2])
-    url <- paste0('127.0.0.1:', port, '/api/datasets')
+    url <- paste0('http://127.0.0.1:', port, '/api/datasets')
 
     response <- GET(url)
     content <- content(response)
