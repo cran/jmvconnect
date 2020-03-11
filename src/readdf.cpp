@@ -72,7 +72,7 @@ DataFrame readDF(
             columnNames = CharacterVector(columnsRequired.size());
         }
 
-        for (int i = 0; i < dataset.columnCount(); i++)
+        for (int i = 0; i < columnCount; i++)
         {
             Column column = dataset[i];
             string columnName = column.name();
@@ -109,7 +109,11 @@ DataFrame readDF(
                 for (int j = 0; j < rowCount; j++)
                 {
                     if ( ! dataset.isRowFiltered(j))
-                        v[rowNo++] = column.raw<double>(j);
+                    {
+                        if ( ! column.shouldTreatAsMissing(j))
+                            v[rowNo] = column.raw<double>(j);
+                        rowNo++;
+                    }
                 }
 
                 columns[colNo] = v;
@@ -122,7 +126,11 @@ DataFrame readDF(
                 for (int j = 0; j < rowCount; j++)
                 {
                     if ( ! dataset.isRowFiltered(j))
-                        v[rowNo++] = column.raw<int>(j);
+                    {
+                        if ( ! column.shouldTreatAsMissing(j))
+                            v[rowNo] = column.raw<int>(j);
+                        rowNo++;
+                    }
                 }
 
                 if (column.measureType() == MeasureType::ID)
@@ -139,7 +147,11 @@ DataFrame readDF(
                 for (int j = 0; j < rowCount; j++)
                 {
                     if ( ! dataset.isRowFiltered(j))
-                        v[rowNo++] = String(column.raws(j));
+                    {
+                        if ( ! column.shouldTreatAsMissing(j))
+                            v[rowNo] = String(column.raws(j));
+                        rowNo++;
+                    }
                 }
 
                 v.attr("jmv-id") = true;
@@ -153,7 +165,7 @@ DataFrame readDF(
 
                 vector<LevelData> m = column.levels();
 
-                int nLevels = column.levelCountExFiltered();
+                int nLevels = column.levelCountExFilteredExMissing();
                 CharacterVector levels = CharacterVector(nLevels);
                 IntegerVector values = IntegerVector(nLevels);
 
@@ -165,9 +177,10 @@ DataFrame readDF(
                 for (; itr != m.end(); itr++)
                 {
                     LevelData &p = *itr;
-                    if ( ! p.filtered())
+                    if (p.filtered() == false && p.treatAsMissing() == false)
                     {
                         int value;
+
                         if (column.dataType() == DataType::TEXT)
                             value = jli;
                         else
@@ -197,8 +210,13 @@ DataFrame readDF(
                     if ( ! dataset.isRowFiltered(j))
                     {
                         int value = column.raw<int>(j);
-                        if (value != MISSING)
-                            v[rowNo] = indexes[value];
+                        if (value != INT_MIN)
+                        {
+                            if ( ! column.shouldTreatAsMissing(j))
+                                v[rowNo] = indexes[value];
+                            else
+                                v[rowNo] = MISSING;
+                        }
                         rowNo++;
                     }
                 }
@@ -234,6 +252,12 @@ DataFrame readDF(
             }
 
             colNo++;
+        }
+
+        if (colNo < columnsRequired.size())
+        {
+            columns.erase(colNo, columnsRequired.size());
+            columnNames.erase(colNo, columnsRequired.size());
         }
 
         columns.attr("names") = columnNames;

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cmath>
 
 #ifdef _WIN32
 #define ALIGN_8 alignas(8)
@@ -44,8 +45,23 @@ typedef struct
     int countExFiltered;
     char *label;
     char *importValue;
+    bool treatAsMissing;
 
 } Level;
+
+typedef union {
+    int i;
+    double d;
+    char *s;
+} Value;
+
+typedef struct
+{
+    int type;
+    int optr;
+    Value value;
+
+} MissingValue;
 
 typedef struct
 {
@@ -67,6 +83,10 @@ typedef struct
     int levelsUsed;
     int levelsCapacity;
     Level *levels;
+
+    MissingValue *missingValues;
+    int missingValuesCapacity;
+    int missingValuesUsed;
 
     char *formula;
     int formulaCapacity;
@@ -102,6 +122,7 @@ public:
     const char *name() const;
     const char *importName() const;
     int rowCount() const;
+    int rowCountExFiltered() const;
     int dps() const;
     bool active() const;
 
@@ -110,8 +131,9 @@ public:
     DataType::Type dataType() const;
     bool autoMeasure() const;
     int levelCount() const;
-    int levelCountExFiltered() const;
+    int levelCountExFilteredExMissing() const;
     const std::vector<LevelData> levels() const;
+    const std::vector<MissingValue> missingValues() const;
     const char *getLabel(int value) const;
     const char *getLabel(const char* value) const;
     const char *getImportValue(int value) const;
@@ -123,6 +145,9 @@ public:
     const char *formulaMessage() const;
     bool trimLevels() const;
     bool hasUnusedLevels() const;
+    bool shouldTreatAsMissing(int rowIndex);
+    bool shouldTreatAsMissing(const char *sv, const char *sv2);
+    bool shouldTreatAsMissing(const char *svalue, int ivalue = INT_MIN, double dvalue = NAN, const char *sv2 = NULL);
 
     const char *raws(int rowIndex);
 
@@ -139,6 +164,7 @@ protected:
     ColumnStruct *_rel;
 
     Level *rawLevel(int value) const;
+    int getIndexExFiltered(int index);
 
     template<typename T> T& cellAt(int rowIndex)
     {
@@ -155,6 +181,10 @@ protected:
 
         return *((T*) &currentBlock->values[index * sizeof(T)]);
     }
+
+    int ivalue(int index);
+    const char *svalue(int index);
+    double dvalue(int index);
 
 private:
     MemoryMap *_mm;

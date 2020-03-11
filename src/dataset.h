@@ -18,6 +18,8 @@ typedef struct
     int capacity;  // size of columns array
     int nextColumnId;
     ColumnStruct *scratch;
+    int rowCountExFiltered;
+    ColumnStruct *indices;
 
 } DataSetStruct;
 
@@ -32,6 +34,7 @@ public:
 
     bool isRowFiltered(int index) const;
     int rowCountExFiltered() const;
+    int getIndexExFiltered(int index);
 
     Column operator[](int index);
     Column operator[](const char *name);
@@ -42,6 +45,7 @@ protected:
     DataSet(MemoryMap *memoryMap);
     DataSetStruct *struc() const;
     ColumnStruct *strucC(int index) const;
+    Column indices();
 
     DataSetStruct *_rel;
 

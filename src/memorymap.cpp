@@ -36,4 +36,6 @@ void MemoryMap::check() const
     // char minor = _start[7];
     if (major > MM_VERSION_MAJOR)
         throw runtime_error("Memory segment version is too new");
+    else if (major < MM_VERSION_MAJOR)
+        throw runtime_error("Memory segment version is too old");
 }

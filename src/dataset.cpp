@@ -80,6 +80,11 @@ int DataSet::rowCount() const
     return _mm->resolve(_rel)->rowCount;
 }
 
+int DataSet::rowCountExFiltered() const
+{
+    return _mm->resolve(_rel)->rowCountExFiltered;
+}
+
 int DataSet::columnCount() const
 {
     return _mm->resolve(_rel)->columnCount;
@@ -111,15 +116,13 @@ bool DataSet::isRowFiltered(int index) const
     return false;
 }
 
-int DataSet::rowCountExFiltered() const
+Column DataSet::indices()
 {
-    int nRows = 0;
+    DataSetStruct *dss = _mm->resolve<DataSetStruct>(_rel);
+    return Column(this, _mm, dss->indices);
+}
 
-    for (int rowNo = 0; rowNo < rowCount(); rowNo++)
-    {
-        if ( ! isRowFiltered(rowNo))
-            nRows++;
-    }
-
-    return nRows;
+int DataSet::getIndexExFiltered(int index)
+{
+    return indices().raw<int>(index);
 }
