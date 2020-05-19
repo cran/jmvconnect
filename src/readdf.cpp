@@ -47,6 +47,7 @@ DataFrame readDF(
         StringVector columnsRequired;
         List columns;
         CharacterVector columnNames;
+        int offset = 0;
 
         if (Rf_isNull(columnsReq))
         {
@@ -56,9 +57,14 @@ DataFrame readDF(
             for (int i = 0; i < dataset.columnCount(); i++)
             {
                 if (dataset[i].columnType() == ColumnType::FILTER)
+                {
+                    offset = i + 1;
                     columnCount--;
+                }
                 else
+                {
                     break; // filters are only at the beginning of the dataset
+                }
             }
 
             columns = List(columnCount);
@@ -74,7 +80,7 @@ DataFrame readDF(
 
         for (int i = 0; i < columnCount; i++)
         {
-            Column column = dataset[i];
+            Column column = dataset[offset + i];
             string columnName = column.name();
 
             if ( ! readAllColumns)

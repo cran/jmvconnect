@@ -1,4 +1,4 @@
-9d246c7746d1a2fab61cc3862476e9d4 *DESCRIPTION
+a687b3c930e9b8feaf37e6c341c1fea6 *DESCRIPTION
 e32e020b3da925a50f4816c3987f4347 *NAMESPACE
 fa98695249a3d7326f3e9330b204c50c *R/RcppExports.R
 1ff5d6b8f8171dcdc6165010ee77be42 *R/eval.R
@@ -14,6 +14,6 @@ e36acf9faa7dcdcaa06a27f6d1bbb22e *src/dataset.h
 2af874dbbaf4b23798e088b8020b58c5 *src/level.h
 f8b1a72598e6df307aef632748e74d4d *src/memorymap.cpp
 9f888077d2ec3a693eb961a2e07624d4 *src/memorymap.h
-3e087da258408fd19a684f8074648876 *src/readdf.cpp
+c5d32e02d9572949561c67b41bf26d29 *src/readdf.cpp
 32ec9fc85baa2c83eeb7945bd7b57f19 *src/readdf.h
 e8b46d1b41672fcea2e5e0731eee5ba8 *src/vartypes.h
