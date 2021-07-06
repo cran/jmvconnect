@@ -15,7 +15,8 @@ using namespace std;
 DataFrame readDF(
         String path,
         SEXP columnsReq,
-        bool headerOnly)
+        bool headerOnly,
+        bool requiresMissings)
 {
     try
     {
@@ -103,9 +104,16 @@ DataFrame readDF(
 
             columnNames[colNo] = String(columnName);
 
+            SEXP desc = R_NilValue;
+            string description = column.description();
+            if (description != "")
+                desc = Rcpp::wrap(description);
+
             if (column.columnType() == ColumnType::FILTER)
             {
-                columns[colNo] = LogicalVector(rowCountExFiltered, true);
+                LogicalVector v = LogicalVector(rowCountExFiltered, true);
+                v.attr("jmv-desc") = desc;
+                columns[colNo] = v;
             }
             else if (column.dataType() == DataType::DECIMAL)
             {
@@ -116,12 +124,13 @@ DataFrame readDF(
                 {
                     if ( ! dataset.isRowFiltered(j))
                     {
-                        if ( ! column.shouldTreatAsMissing(j))
+                        if (column.shouldTreatAsMissing(j) == false)
                             v[rowNo] = column.raw<double>(j);
                         rowNo++;
                     }
                 }
 
+                v.attr("jmv-desc") = desc;
                 columns[colNo] = v;
             }
             else if (column.dataType() == DataType::INTEGER && ! column.hasLevels())
@@ -133,7 +142,7 @@ DataFrame readDF(
                 {
                     if ( ! dataset.isRowFiltered(j))
                     {
-                        if ( ! column.shouldTreatAsMissing(j))
+                        if (column.shouldTreatAsMissing(j) == false)
                             v[rowNo] = column.raw<int>(j);
                         rowNo++;
                     }
@@ -142,6 +151,7 @@ DataFrame readDF(
                 if (column.measureType() == MeasureType::ID)
                     v.attr("jmv-id") = true;
 
+                v.attr("jmv-desc") = desc;
                 columns[colNo] = v;
             }
             else if (column.dataType() == DataType::TEXT &&
@@ -154,13 +164,14 @@ DataFrame readDF(
                 {
                     if ( ! dataset.isRowFiltered(j))
                     {
-                        if ( ! column.shouldTreatAsMissing(j))
+                        if (column.shouldTreatAsMissing(j) == false)
                             v[rowNo] = String(column.raws(j));
                         rowNo++;
                     }
                 }
 
                 v.attr("jmv-id") = true;
+                v.attr("jmv-desc") = desc;
                 columns[colNo] = v;
             }
             else
@@ -171,9 +182,15 @@ DataFrame readDF(
 
                 vector<LevelData> m = column.levels();
 
-                int nLevels = column.levelCountExFilteredExMissing();
+                int nLevels;
+                if (column.trimLevels())
+                    nLevels = column.levelCountExFiltered(requiresMissings);
+                else
+                    nLevels = column.levelCountExTreatAsMissings(requiresMissings);
+
                 CharacterVector levels = CharacterVector(nLevels);
                 IntegerVector values = IntegerVector(nLevels);
+                CharacterVector missings;
 
                 map<int, int> indexes;
                 int jli = 0;
@@ -183,7 +200,9 @@ DataFrame readDF(
                 for (; itr != m.end(); itr++)
                 {
                     LevelData &p = *itr;
-                    if (p.filtered() == false && p.treatAsMissing() == false)
+
+                    if ((p.filtered() == false || column.trimLevels() == false)
+                            && (requiresMissings || p.treatAsMissing() == false))
                     {
                         int value;
 
@@ -195,6 +214,9 @@ DataFrame readDF(
                         indexes[value] = rli + 1;
                         values[rli] = value;
                         levels[rli] = String(p.label());
+
+                        if (requiresMissings && p.treatAsMissing())
+                            missings.push_back(String(p.label()));
 
                         jli++;
                         rli++;
@@ -218,7 +240,7 @@ DataFrame readDF(
                         int value = column.raw<int>(j);
                         if (value != INT_MIN)
                         {
-                            if ( ! column.shouldTreatAsMissing(j))
+                            if (requiresMissings || column.shouldTreatAsMissing(j) == false)
                                 v[rowNo] = indexes[value];
                             else
                                 v[rowNo] = MISSING;
@@ -231,34 +253,31 @@ DataFrame readDF(
 
                 v.attr("levels") = levels;
 
-                if (column.dataType() == DataType::TEXT)
-                {
-                    if (column.measureType() == MeasureType::ORDINAL)
-                        v.attr("class") = CharacterVector::create("ordered", "factor");
-                    else
-                        v.attr("class") = "factor";
-                }
+                if (column.measureType() == MeasureType::ORDINAL)
+                    v.attr("class") = CharacterVector::create("ordered", "factor");
                 else
-                {
+                    v.attr("class") = "factor";
+
+                if ( ! column.trimLevels())
+                    v.attr("jmv-retain-unused") = true;
+
+                if (column.dataType() == DataType::INTEGER)
                     v.attr("values") = values;
-
-                    if (column.measureType() == MeasureType::ORDINAL)
-                        v.attr("class") = CharacterVector::create("ordered", "factor");
-                    else
-                        v.attr("class") = CharacterVector::create("factor");
-                }
-
-                if ( ! column.trimLevels() && column.hasUnusedLevels())
-                    v.attr("jmv-unused-levels") = true;
 
                 if (column.measureType() == MeasureType::ID)
                     v.attr("jmv-id") = true;
 
+                if (requiresMissings)
+                    v.attr("jmv-missings") = missings;
+
+                v.attr("jmv-desc") = desc;
                 columns[colNo] = v;
             }
 
             colNo++;
         }
+
+        delete mm;
 
         if (colNo < columnsRequired.size())
         {

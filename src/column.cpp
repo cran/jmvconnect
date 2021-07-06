@@ -35,6 +35,15 @@ const char *Column::importName() const
     return _mm->resolve(struc()->importName);
 }
 
+const char *Column::description() const
+{
+    const char *desc = struc()->description;
+    if (desc != NULL)
+        return _mm->resolve(desc);
+    else
+        return "";
+}
+
 ColumnType::Type Column::columnType() const
 {
     return (ColumnType::Type) struc()->columnType;
@@ -101,7 +110,7 @@ int Column::levelCount() const
     return struc()->levelsUsed;
 }
 
-int Column::levelCountExFilteredExMissing() const
+int Column::levelCountExTreatAsMissings(bool requiresMissings) const
 {
     int count = 0;
     ColumnStruct *s = struc();
@@ -109,7 +118,22 @@ int Column::levelCountExFilteredExMissing() const
     for (int i = 0; i < s->levelsUsed; i++)
     {
         Level &level = levels[i];
-        if (level.countExFiltered > 0 && level.treatAsMissing == false)
+        if (requiresMissings || level.treatAsMissing == false)
+            count++;
+    }
+    return count;
+}
+
+int Column::levelCountExFiltered(bool requiresMissings) const
+{
+    int count = 0;
+    ColumnStruct *s = struc();
+    Level *levels = _mm->resolve(s->levels);
+    for (int i = 0; i < s->levelsUsed; i++)
+    {
+        Level &level = levels[i];
+        if (level.countExFiltered > 0
+                && (requiresMissings || level.treatAsMissing == false))
             count++;
     }
     return count;
@@ -160,18 +184,19 @@ const vector<LevelData> Column::levels() const
         Level &l = levels[i];
         bool filtered = l.countExFiltered == 0;
         bool treatAsMissing = l.treatAsMissing;
+        bool pinned = l.pinned;
 
         if (dataType() == DataType::TEXT)
         {
             char *value = _mm->resolve(l.importValue);
             char *label = _mm->resolve(l.label);
-            m.push_back(LevelData(value, label, filtered, treatAsMissing));
+            m.push_back(LevelData(value, label, pinned, filtered, treatAsMissing));
         }
         else
         {
             int value   = l.value;
             char *label = _mm->resolve(l.label);
-            m.push_back(LevelData(value, label, filtered, treatAsMissing));
+            m.push_back(LevelData(value, label, pinned, filtered, treatAsMissing));
         }
     }
 

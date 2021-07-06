@@ -46,6 +46,7 @@ typedef struct
     char *label;
     char *importValue;
     bool treatAsMissing;
+    bool pinned;
 
 } Level;
 
@@ -98,6 +99,8 @@ typedef struct
 
     char changes;
 
+    char *description;
+
 } ColumnStruct;
 
 namespace ColumnType
@@ -108,7 +111,8 @@ namespace ColumnType
         DATA = 1,
         COMPUTED = 2,
         RECODED = 3,
-        FILTER = 4
+        FILTER = 4,
+        OUTPUT = 5,
     };
 }
 
@@ -121,6 +125,7 @@ public:
     int id() const;
     const char *name() const;
     const char *importName() const;
+    const char *description() const;
     int rowCount() const;
     int rowCountExFiltered() const;
     int dps() const;
@@ -131,7 +136,8 @@ public:
     DataType::Type dataType() const;
     bool autoMeasure() const;
     int levelCount() const;
-    int levelCountExFilteredExMissing() const;
+    int levelCountExTreatAsMissings(bool requiresMissings = false) const;
+    int levelCountExFiltered(bool requiresMissings = false) const;
     const std::vector<LevelData> levels() const;
     const std::vector<MissingValue> missingValues() const;
     const char *getLabel(int value) const;

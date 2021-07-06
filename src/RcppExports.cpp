@@ -6,21 +6,22 @@
 using namespace Rcpp;
 
 // readDF
-DataFrame readDF(String path, SEXP columnsReq, bool headerOnly);
-RcppExport SEXP _jmvconnect_readDF(SEXP pathSEXP, SEXP columnsReqSEXP, SEXP headerOnlySEXP) {
+DataFrame readDF(String path, SEXP columnsReq, bool headerOnly, bool requiresMissings);
+RcppExport SEXP _jmvconnect_readDF(SEXP pathSEXP, SEXP columnsReqSEXP, SEXP headerOnlySEXP, SEXP requiresMissingsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< String >::type path(pathSEXP);
     Rcpp::traits::input_parameter< SEXP >::type columnsReq(columnsReqSEXP);
     Rcpp::traits::input_parameter< bool >::type headerOnly(headerOnlySEXP);
-    rcpp_result_gen = Rcpp::wrap(readDF(path, columnsReq, headerOnly));
+    Rcpp::traits::input_parameter< bool >::type requiresMissings(requiresMissingsSEXP);
+    rcpp_result_gen = Rcpp::wrap(readDF(path, columnsReq, headerOnly, requiresMissings));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_jmvconnect_readDF", (DL_FUNC) &_jmvconnect_readDF, 3},
+    {"_jmvconnect_readDF", (DL_FUNC) &_jmvconnect_readDF, 4},
     {NULL, NULL, 0}
 };
 

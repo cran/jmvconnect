@@ -3,7 +3,7 @@ evalRemote <- function(script, dataPath, echo, outputPath, ...) {
     options <- list(...)
     figWidth <- options$figWidth
     figHeight <- options$figHeight
-    data <- readDF(dataPath, NULL, FALSE)
+    data <- readDF(dataPath, NULL, FALSE, FALSE)
     results <- eval(script, data, echo, figWidth=figWidth, figHeight=figHeight)
     saveRDS(results, file=outputPath)
     NULL
@@ -12,7 +12,7 @@ evalRemote <- function(script, dataPath, echo, outputPath, ...) {
 #' @useDynLib jmvconnect
 #' @importFrom Rcpp evalCpp
 read <- function(path, columns=NULL, headerOnly=FALSE) {
-    readDF(path, columns, headerOnly)
+    readDF(path, columns, headerOnly, FALSE)
 }
 
 #' @importFrom rappdirs user_config_dir
@@ -88,7 +88,7 @@ read <- function(id, columns) {
     if (is.null(dataset))
         stop('No such data set')
 
-    readDF(dataset$buffer, columns, FALSE)
+    readDF(dataset$buffer, columns, FALSE, FALSE)
 }
 
 #' Lists the data sets available from jamovi
