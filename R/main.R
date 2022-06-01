@@ -1,10 +1,7 @@
 
-evalRemote <- function(script, dataPath, echo, outputPath, ...) {
-    options <- list(...)
-    figWidth <- options$figWidth
-    figHeight <- options$figHeight
-    data <- readDF(dataPath, NULL, FALSE, FALSE)
-    results <- eval(script, data, echo, figWidth=figWidth, figHeight=figHeight)
+evalRemote <- function(script, dataPath, echo, outputPath, figWidth, figHeight, columns=NULL, saveColumns=FALSE) {
+    data <- readDF(dataPath, columns, FALSE, FALSE)
+    results <- eval(script, data, echo, figWidth=figWidth, figHeight=figHeight, saveColumns=saveColumns)
     saveRDS(results, file=outputPath)
     NULL
 }

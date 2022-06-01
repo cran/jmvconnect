@@ -2,25 +2,26 @@
 #' @importFrom utils capture.output
 #' @importFrom evaluate evaluate new_output_handler
 #' @importFrom jmvcore Options Group Image Preformatted
-eval <- function(script, data, echo, root, ...) {
+#' @importFrom grDevices pdf
+eval <- function(script, data, echo, root, figWidth=400, figHeight=300, saveColumns=FALSE, ...) {
 
     eval.env <- new.env()
 
     if ( ! missing(data))
         eval.env$data <- data
 
+    origColumnNames <- colnames(eval.env$data)
+
     env <- new.env()
     env$count <- 1
 
-    conf <- list(...)
-
-    figWidth <- as.integer(conf$figWidth)
+    figWidth <- as.integer(figWidth)
     if (length(figWidth) == 1 && ! is.na(figWidth))
         env$figWidth <- figWidth
     else
         env$figWidth <- 400
 
-    figHeight <- as.integer(conf$figHeight)
+    figHeight <- as.integer(figHeight)
     if (length(figHeight) == 1 && ! is.na(figHeight))
         env$figHeight <- figHeight
     else
@@ -28,12 +29,15 @@ eval <- function(script, data, echo, root, ...) {
 
     env$echo <- isTRUE(echo)
 
+    createdColumns <- jmvcore::OptionOutput$new('createdColumns')
+    createdColumns$value <- list(value=saveColumns, vars=character(), synced=character())
     options <- jmvcore::Options$new()
+    options$.addOption(createdColumns)
 
     if (missing(root))
-        root <- Group$new(options, title="Results")
+        root <- jmvcore::Group$new(options, title="Results")
 
-    text_handler <- function(object, capture) {
+    text_handler <- function(object, capture=TRUE) {
 
         if (inherits(object, 'ResultsElement')) {
 
@@ -68,7 +72,7 @@ eval <- function(script, data, echo, root, ...) {
             return()
 
         if (is.null(env$last) || ! inherits(env$last, 'Preformatted')) {
-            results <- Preformatted$new(options, paste(env$count))
+            results <- jmvcore::Preformatted$new(options, paste(env$count))
             root$add(results)
             env$count <- env$count + 1
         }
@@ -89,7 +93,7 @@ eval <- function(script, data, echo, root, ...) {
     }
 
     graphics_handler <- function(plot) {
-        results <- Image$new(
+        results <- jmvcore::Image$new(
             options=options,
             name=paste(env$count),
             renderFun='.render',
@@ -101,17 +105,62 @@ eval <- function(script, data, echo, root, ...) {
         env$last <- NULL
     }
 
-    handler <- new_output_handler(
+    handler <- evaluate::new_output_handler(
         source=source_handler,
         text=function(text) text_handler(text, FALSE),
         value=function(text) text_handler(text, TRUE),
         graphics=graphics_handler)
 
-    evaluate(
+    # prevents a flashing window on windows
+    options(device=function(...) pdf(file=NULL, ...))
+
+    data <- evaluate::evaluate(
         input=script,
         envir=eval.env,
         output_handler=handler,
         stop_on_error=2)
+
+    data <- eval.env$data
+
+    output <- jmvcore::Output$new(options, 'createdColumns', initInRun=TRUE)
+
+    if (output$enabled) {
+
+        root$add(output)
+
+        keys  <- character()
+        names <- character()
+        descs <- character()
+        types <- character()
+
+        for (columnName in colnames(data)) {
+            if (columnName %in% origColumnNames)
+                next()
+            column <- data[[columnName]]
+            keys <- c(keys, columnName)
+            names <- c(names, columnName)
+
+            desc <- attr(column, 'jmv-desc')
+            if (is.null(desc))
+                desc <- ''
+
+            descs <- c(descs, desc)
+
+            if (is.numeric(column))
+                type <- 'continuous'
+            else if (is.ordered(column))
+                type <- 'ordinal'
+            else
+                type <- 'nominal'
+
+            types <- c(types, type)
+        }
+
+        output$set(keys, names, descs, types)
+
+        for (key in keys)
+            output$setValues(key=key, data[[key]])
+    }
 
     root
 }
