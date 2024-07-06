@@ -1,14 +1,13 @@
-1cd5197aabac568caf72bbfa574996a6 *DESCRIPTION
+3514478c2a76ed0b5208e5dbe120a296 *DESCRIPTION
 fe2f55c32b036d29d4f37561592e898f *NAMESPACE
 3ea410f4434c65da068016e9ba14fe28 *R/RcppExports.R
-72810c93b874be1ab27381ede0f3d2b8 *R/eval.R
+cd8313110af7d9ae33f2f210985df9b6 *R/eval.R
 2009dfba8a44f557d275f3f2625279f3 *R/main.R
 e8fe20af85937570b0ab4e456fb063d4 *man/read.Rd
 0f3ff74a1febcc68cbc4fc30331633f2 *man/what.Rd
-1f06212fc4eccfc3c1eb9a2738b5926b *src/Makevars
 e15e19e7c048582922bb6910e8f7800c *src/RcppExports.cpp
 487617a55fa25623464e20294165e8e8 *src/column.cpp
-841b5bdd9a76d3d28393ad6ad5b8d579 *src/column.h
+7fe97fb629e13ea3b0b95f090142a03c *src/column.h
 d40cbf58ab1c8c36593cd229d9b4565f *src/dataset.cpp
 e36acf9faa7dcdcaa06a27f6d1bbb22e *src/dataset.h
 f4e40a04966467fc148c9ed839f9a385 *src/level.h
